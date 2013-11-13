@@ -8,43 +8,42 @@
 
 'use strict';
 
+var path = require("path");
+
 module.exports = function(grunt) {
+  grunt.registerMultiTask("barrier", "Run Barrier test suite", function() {
+    var args, done, files, options, spawnOptions, command;
 
-  // Please see the Grunt documentation for more information regarding task
-  // creation: http://gruntjs.com/creating-tasks
+    done    = this.async();
+    options = this.options();
+    files   = [];
 
-  grunt.registerMultiTask('barrier', 'The best Grunt plugin ever.', function() {
-    // Merge task-specific and/or target-specific options with these defaults.
-    var options = this.options({
-      punctuation: '.',
-      separator: ', '
+    this.files.forEach(function(pair) {
+      pair.src.forEach(function(f) {
+        files.push(path.resolve(f));
+      });
     });
 
-    // Iterate over all specified file groups.
-    this.files.forEach(function(f) {
-      // Concat specified files.
-      var src = f.src.filter(function(filepath) {
-        // Warn on and remove invalid source files (if nonull was set).
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
-          return false;
-        } else {
-          return true;
-        }
-      }).map(function(filepath) {
-        // Read file source.
-        return grunt.file.read(filepath);
-      }).join(grunt.util.normalizelf(options.separator));
+    args = [];
 
-      // Handle options.
-      src += options.punctuation;
+    if (options.reporter) {
+      args.push("--reporter");
+      args.push(options.reporter);
+    }
 
-      // Write the destination file.
-      grunt.file.write(f.dest, src);
+    command = path.resolve(path.join(__dirname, '..', '..', '.bin', 'barrier'));
 
-      // Print a success message.
-      grunt.log.writeln('File "' + f.dest + '" created.');
+    spawnOptions = {
+      opts: {
+        env: process.env,
+        stdio: 'inherit'
+      },
+      cmd: command,
+      args: args.concat(grunt.file.expand(files))
+    };
+
+    grunt.util.spawn(spawnOptions, function(err, output) {
+      done();
     });
   });
-
 };
