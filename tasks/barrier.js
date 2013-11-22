@@ -33,6 +33,10 @@ module.exports = function(grunt) {
 
     command = path.resolve(path.join(__dirname, '..', '..', '.bin', 'barrier'));
 
+    if (options.cmd) {
+      command = options.cmd;
+    }
+
     spawnOptions = {
       opts: {
         env: process.env,
